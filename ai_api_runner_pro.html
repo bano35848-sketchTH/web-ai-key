@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI API Runner Pro</title>
+  <meta name="description" content="Professional single-file AI API runner and key manager." />
+  <style>
+    :root{
+      --bg:#08111f;
+      --panel:#0d1929;
+      --panel2:#111f33;
+      --line:#20324b;
+      --text:#eef5ff;
+      --muted:#91a4bc;
+      --accent:#6ea8fe;
+      --accent2:#7d5cff;
+      --success:#34d399;
+      --warn:#fbbf24;
+      --danger:#fb7185;
+      --shadow:0 20px 60px rgba(0,0,0,.28);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:
+      radial-gradient(circle at 15% 0%, rgba(90,119,255,.16), transparent 28%),
+      radial-gradient(circle at 100% 10%, rgba(0,220,180,.10), transparent 30%),var(--bg);color:var(--text)}
+    button,input,textarea,select{font:inherit}
+    button{cursor:pointer}
+    .app{display:grid;grid-template-columns:255px 1fr;min-height:100vh}
+    .sidebar{position:sticky;top:0;height:100vh;padding:22px 16px;border-right:1px solid rgba(255,255,255,.06);background:rgba(6,14,25,.76);backdrop-filter:blur(18px)}
+    .brand{display:flex;align-items:center;gap:11px;padding:7px 9px 19px}
+    .logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent2),var(--accent));font-weight:900;box-shadow:0 10px 30px rgba(110,168,254,.18)}
+    .brand strong{display:block;font-size:14px;letter-spacing:.2px}
+    .brand span{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+    .nav{display:grid;gap:7px}
+    .nav button{border:1px solid transparent;color:#bdd0e8;background:transparent;text-align:left;padding:11px 12px;border-radius:12px;display:flex;gap:10px;align-items:center}
+    .nav button:hover,.nav button.active{background:rgba(255,255,255,.055);border-color:rgba(255,255,255,.08);color:#fff}
+    .nav i{width:20px;text-align:center;font-style:normal}
+    .side-bottom{position:absolute;left:16px;right:16px;bottom:18px;padding:12px;border:1px solid var(--line);background:rgba(255,255,255,.025);border-radius:14px}
+    .status-row{display:flex;align-items:center;justify-content:space-between;font-size:12px}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 0 4px rgba(52,211,153,.10)}
+    .main{padding:24px;max-width:1550px;width:100%;margin:auto}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+    .title h1{margin:0;font-size:25px;letter-spacing:-.5px}
+    .title p{margin:5px 0 0;color:var(--muted);font-size:13px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{border:1px solid var(--line);background:#122239;color:#e8f1ff;padding:10px 13px;border-radius:11px}
+    .btn:hover{filter:brightness(1.1)}
+    .btn.primary{border-color:transparent;background:linear-gradient(135deg,var(--accent2),#4f7cff)}
+    .btn.ghost{background:transparent}
+    .btn.danger{color:#fecdd3;border-color:rgba(251,113,133,.24);background:rgba(251,113,133,.08)}
+    .grid{display:grid;gap:14px}
+    .stats{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .card{background:linear-gradient(180deg,rgba(17,31,51,.92),rgba(10,22,37,.92));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .stat{padding:16px}
+    .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+    .value{font-size:24px;font-weight:800;margin-top:9px}
+    .sub{font-size:11px;color:var(--muted);margin-top:4px}
+    .content{grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);margin-top:14px}
+    .card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 17px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .card-head h2{margin:0;font-size:15px}
+    .card-body{padding:17px}
+    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+    .full{grid-column:1/-1}
+    label{display:grid;gap:7px;font-size:12px;color:#c8d5e7}
+    input,textarea,select{width:100%;border:1px solid #263a55;background:#0a1728;color:#eef6ff;border-radius:11px;padding:11px 12px;outline:none}
+    input:focus,textarea:focus,select:focus{border-color:#527cf5;box-shadow:0 0 0 3px rgba(82,124,245,.12)}
+    textarea{resize:vertical;min-height:90px}
+    .input-wrap{display:flex;gap:8px}
+    .input-wrap input{min-width:0}
+    .mini{padding:9px 11px;white-space:nowrap}
+    .provider-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+    .provider{padding:9px 10px;border:1px solid var(--line);background:rgba(255,255,255,.02);border-radius:10px;color:#bac9db}
+    .provider.active{border-color:#5c7dff;background:rgba(92,125,255,.13);color:#fff}
+    .chat{height:610px;display:flex;flex-direction:column}
+    .messages{padding:17px;overflow:auto;display:flex;flex-direction:column;gap:12px;flex:1}
+    .msg{max-width:86%;padding:12px 13px;border-radius:14px;line-height:1.55;font-size:13px;white-space:pre-wrap;word-break:break-word}
+    .msg.user{align-self:flex-end;background:linear-gradient(135deg,#263f7a,#3c55a0)}
+    .msg.ai{align-self:flex-start;background:#0b1727;border:1px solid #24354c}
+    .msg .meta{display:block;color:#9cafc6;font-size:10px;margin-bottom:6px}
+    .composer{padding:14px;border-top:1px solid rgba(255,255,255,.06);display:grid;gap:10px}
+    .compose-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+    .compose-row textarea{min-height:70px;max-height:180px;flex:1;min-width:240px}
+    .power-wrap{position:relative;display:flex;align-items:center}
+    .power-btn{border:1px solid #4b3b82;background:linear-gradient(135deg,rgba(125,92,255,.20),rgba(78,123,255,.12));color:#ded7ff;padding:10px 12px;border-radius:11px;white-space:nowrap}
+    .power-btn.active{border-color:#8c74ff;box-shadow:0 0 0 3px rgba(125,92,255,.11)}
+    .power-pop{position:absolute;right:0;bottom:calc(100% + 9px);width:320px;padding:14px;border:1px solid #334a68;background:#0d1929;border-radius:16px;box-shadow:0 22px 60px rgba(0,0,0,.42);z-index:20}
+    .power-title{font-size:13px;font-weight:800;margin-bottom:4px}
+    .power-sub{font-size:10px;color:var(--muted);line-height:1.45;margin-bottom:12px}
+    .power-levels{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+    .power-level{border:1px solid var(--line);background:#0a1728;color:#bfcde0;border-radius:9px;padding:8px 5px;font-size:10px}
+    .power-level:hover{border-color:#607cff}
+    .power-level.selected{background:rgba(105,91,255,.16);border-color:#7868ff;color:#fff}
+    .range-row{display:grid;gap:7px;margin-top:9px}
+    .range-head{display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#c8d5e7}
+    input[type="range"]{padding:0;border:0;background:transparent;box-shadow:none}
+    .check-row{display:flex;align-items:center;gap:8px;margin-top:11px;font-size:11px;color:#c8d5e7}
+    .check-row input{width:auto}
+    .thinking-box{margin-top:9px;padding:10px 11px;border:1px solid #29415f;border-radius:11px;background:rgba(95,124,190,.06)}
+    .thinking-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .thinking-label{font-size:10px;color:#a9bdd6;text-transform:uppercase;letter-spacing:.08em}
+    .thinking-btn{border:0;background:transparent;color:#90b4ff;font-size:11px;padding:3px 0}
+    .thinking-summary{margin-top:8px;color:#bfcde0;font-size:11px;line-height:1.55;white-space:pre-wrap}
+    .thinking-summary[hidden]{display:none}
+    .power-chip{font-size:10px;padding:4px 7px;border-radius:999px;border:1px solid rgba(125,92,255,.28);background:rgba(125,92,255,.10);color:#c9c0ff}
+    .side-stack{display:grid;gap:14px}
+    .log{max-height:320px;overflow:auto}
+    .log-item{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .log-item:last-child{border-bottom:0}
+    .log-top{display:flex;justify-content:space-between;gap:10px;font-size:11px}
+    .muted{color:var(--muted)}
+    .tag{border:1px solid var(--line);border-radius:999px;padding:4px 7px;font-size:10px;color:#bcd0e7}
+    .ok{color:var(--success)}
+    .warn{color:var(--warn)}
+    .bad{color:var(--danger)}
+    .hidden{display:none!important}
+    .section{margin-top:14px}
+    .notice{padding:12px 13px;border-radius:12px;border:1px solid rgba(251,191,36,.20);background:rgba(251,191,36,.06);color:#f9ddb0;font-size:12px;line-height:1.5}
+    .settings{display:none}
+    .settings.active{display:block}
+    .dash.active{display:block}
+    .dash{display:none}
+    .key-list{display:grid;gap:8px}
+    .key-row{padding:11px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02);display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .key-left{min-width:0}
+    .key-name{font-size:12px;font-weight:700}
+    .key-mask{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--muted);margin-top:3px}
+    .pill{font-size:10px;padding:5px 8px;border-radius:999px;background:rgba(52,211,153,.09);color:#8df0c3;border:1px solid rgba(52,211,153,.18)}
+    .empty{color:var(--muted);font-size:12px;text-align:center;padding:18px}
+    .footer-note{color:var(--muted);font-size:11px;margin-top:9px}
+    @media (max-width:1020px){.app{grid-template-columns:1fr}.sidebar{height:auto;position:relative;border-right:0;border-bottom:1px solid rgba(255,255,255,.06)}.nav{grid-template-columns:repeat(4,1fr)}.side-bottom{display:none}.content{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:700px){.main{padding:14px}.provider-grid,.form-grid{grid-template-columns:1fr 1fr}.nav{grid-template-columns:1fr 1fr}.topbar{align-items:flex-start;flex-direction:column}.compose-row{flex-direction:column}.compose-row .btn{width:100%}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">AI</div>
+        <div><strong>AI API Runner</strong><span>Professional Console</span></div>
+      </div>
+
+      <nav class="nav">
+        <button class="active" data-view="dashboard"><i>⌂</i>Dashboard</button>
+        <button data-view="keys"><i>🔑</i>API Keys</button>
+        <button data-view="settings"><i>⚙</i>Settings</button>
+        <button data-view="logs"><i>◷</i>Activity</button>
+      </nav>
+
+      <div class="side-bottom">
+        <div class="status-row"><span>Local secure mode</span><span class="dot"></span></div>
+        <div class="footer-note">Keys are stored in this browser only.</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="title">
+          <h1 id="pageTitle">AI API Dashboard</h1>
+          <p>จัดการคีย์ API และรันข้อความกับ AI provider จากหน้าเดียว</p>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" id="exportBtn">Export</button>
+          <button class="btn ghost" id="importBtn">Import</button>
+          <input id="importFile" type="file" accept="application/json" class="hidden">
+          <button class="btn primary" id="testTopBtn">Test API</button>
+        </div>
+      </header>
+
+      <section class="dash active" id="dashboardView">
+        <div class="grid stats">
+          <div class="card stat"><div class="label">Active Provider</div><div class="value" id="statProvider">—</div><div class="sub" id="statModel">No model selected</div></div>
+          <div class="card stat"><div class="label">Requests</div><div class="value" id="statRequests">0</div><div class="sub">ตั้งแต่เปิดหน้าเว็บ</div></div>
+          <div class="card stat"><div class="label">Success Rate</div><div class="value" id="statSuccess">100%</div><div class="sub">จาก activity log</div></div>
+          <div class="card stat"><div class="label">Latency</div><div class="value" id="statLatency">—</div><div class="sub">คำขอล่าสุด</div></div>
+        </div>
+
+        <div class="grid content">
+          <section class="card chat">
+            <div class="card-head">
+              <h2>AI Playground <span class="muted" style="font-size:10px;font-weight:500">• reasoning controls</span></h2>
+              <span class="tag" id="readyTag">Not configured</span>
+            </div>
+            <div class="messages" id="messages">
+              <div class="msg ai"><span class="meta">AI API RUNNER</span>พร้อมทำงาน — ใส่ API Key แล้วกด Test API หรือส่งข้อความได้เลย</div>
+            </div>
+            <div class="composer">
+              <textarea id="prompt" placeholder="พิมพ์คำถามหรือคำสั่งของคุณ... (Ctrl/Cmd + Enter เพื่อส่ง)"></textarea>
+              <div class="compose-row">
+                <select id="quickModel" title="Model"></select>
+                <div class="power-wrap">
+                  <button class="power-btn" id="powerBtn" type="button">⚡ เสริมพลัง AI <span class="power-chip" id="powerChip">อัตโนมัติ</span></button>
+                  <div class="power-pop hidden" id="powerPanel">
+                    <div class="power-title">⚡ เสริมพลัง AI</div>
+                    <div class="power-sub">เลือกความลึกของการให้เหตุผลและงบการสร้างผลลัพธ์สำหรับคำขอนี้</div>
+                    <div class="power-levels" id="powerLevels">
+                      <button class="power-level" data-thinking="minimal">ธรรมดา</button>
+                      <button class="power-level" data-thinking="low">พื้นฐาน</button>
+                      <button class="power-level" data-thinking="medium">อัตโนมัติ</button>
+                      <button class="power-level" data-thinking="high">แรง</button>
+                      <button class="power-level" data-thinking="max">MAX</button>
+                    </div>
+                    <div class="range-row">
+                      <div class="range-head"><span>Max output / thinking budget</span><strong id="maxThinkingLabel">8192</strong></div>
+                      <input id="maxThinkingInput" type="range" min="1024" max="32768" step="1024" value="8192">
+                    </div>
+                    <label class="check-row"><input id="showThinkingInput" type="checkbox" checked> แสดง “สรุปการคิด” หลังคำตอบ</label>
+                    <div class="power-sub" style="margin:10px 0 0">ระบบจะแสดงเฉพาะสรุปเหตุผลที่ API เปิดเผย ไม่ใช่ chain-of-thought ภายในแบบดิบ</div>
+                  </div>
+                </div>
+                <button class="btn primary" id="sendBtn">Send</button>
+                <button class="btn danger" id="clearChatBtn">Clear</button>
+              </div>
+            </div>
+          </section>
+
+          <div class="side-stack">
+            <section class="card">
+              <div class="card-head"><h2>Connection</h2><span class="tag" id="connTag">Idle</span></div>
+              <div class="card-body">
+                <div class="form-grid">
+                  <label>Provider
+                    <select id="providerSelect">
+                      <option value="openai">OpenAI</option>
+                      <option value="openrouter">OpenRouter</option>
+                      <option value="anthropic">Anthropic</option>
+                      <option value="gemini">Google Gemini</option>
+                      <option value="custom">Custom OpenAI-compatible</option>
+                    </select>
+                  </label>
+                  <label>Model
+                    <input id="modelInput" value="gpt-4.1-mini" placeholder="model-id">
+                  </label>
+                  <label class="full">API Key
+                    <div class="input-wrap"><input id="apiKeyInput" type="password" placeholder="sk-..." autocomplete="off"><button class="btn mini" id="toggleKeyBtn">Show</button></div>
+                  </label>
+                  <label class="full">Endpoint
+                    <input id="endpointInput" placeholder="ปล่อยว่างเพื่อใช้ endpoint มาตรฐานของ provider">
+                  </label>
+                  <div class="full"><button class="btn primary" id="saveConfigBtn">Save & Activate</button> <button class="btn" id="testBtn">Test Connection</button></div>
+                </div>
+                <div class="notice section">สำหรับใช้งานจริงกับเว็บสาธารณะ ควรส่งคำขอผ่าน backend/proxy ของคุณ เพื่อไม่ให้ API Key ถูกเปิดเผยต่อ browser และผู้ใช้รายอื่น</div>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="card-head"><h2>Run Parameters</h2></div>
+              <div class="card-body">
+                <div class="form-grid">
+                  <label>Temperature <input id="tempInput" type="number" min="0" max="2" step="0.1" value="0.7"></label>
+                  <label>Max Tokens <input id="maxTokensInput" type="number" min="64" step="64" value="1024"></label>
+                  <label class="full">System Prompt <textarea id="systemInput">You are a helpful AI assistant.</textarea></label>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings" id="keysView">
+        <div class="card">
+          <div class="card-head"><h2>API Key Vault</h2><span class="tag">Browser local storage</span></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <label>Key Label <input id="keyLabelInput" placeholder="เช่น Production OpenAI"></label>
+              <label>Provider <select id="keyProviderInput"><option value="openai">OpenAI</option><option value="openrouter">OpenRouter</option><option value="anthropic">Anthropic</option><option value="gemini">Google Gemini</option><option value="custom">Custom</option></select></label>
+              <label class="full">API Key <input id="keyValueInput" type="password" placeholder="วาง API Key ที่นี่" autocomplete="off"></label>
+              <div class="full"><button class="btn primary" id="addKeyBtn">Add Key</button></div>
+            </div>
+            <div class="key-list section" id="keyList"></div>
+            <div class="notice section">หมายเหตุ: localStorage ไม่ใช่ password vault ระดับองค์กร หากสร้างระบบ production ให้เก็บ secret ที่ฝั่ง server/secret manager และใช้ short-lived tokens เมื่อเหมาะสม</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings" id="settingsView">
+        <div class="card">
+          <div class="card-head"><h2>Application Settings</h2></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <label>Default System Prompt <textarea id="defaultSystemInput"></textarea></label>
+              <label>Request Timeout (ms) <input id="timeoutInput" type="number" min="5000" step="1000" value="60000"></label>
+              <label>Auto-save configuration <select id="autosaveSelect"><option value="on">On</option><option value="off">Off</option></select></label>
+              <label>Response format <select id="responseFormatSelect"><option value="text">Text</option><option value="json">JSON (raw)</option></select></label>
+              <div class="full"><button class="btn primary" id="saveAppSettingsBtn">Save Settings</button> <button class="btn danger" id="clearAllBtn">Clear Local Data</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings" id="logsView">
+        <div class="card">
+          <div class="card-head"><h2>Activity Log</h2><button class="btn danger" id="clearLogsBtn">Clear Logs</button></div>
+          <div class="card-body"><div class="log" id="fullLog"></div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+(() => {
+  const STORAGE = {
+    config: "ai_runner_config_v1",
+    keys: "ai_runner_keys_v1",
+    settings: "ai_runner_settings_v1",
+    logs: "ai_runner_logs_v1"
+  };
+
+  const defaults = {
+    config: { provider:"openai", model:"gpt-4.1-mini", apiKey:"", endpoint:"" },
+    settings: { defaultSystem:"You are a helpful AI assistant.", timeout:60000, autosave:"on", responseFormat:"text", temperature:0.7, maxTokens:1024, thinkingLevel:"medium", maxThinkingTokens:8192, showThinkingSummary:true }
+  };
+
+  let state = {
+    config: load(STORAGE.config, defaults.config),
+    settings: {...defaults.settings, ...load(STORAGE.settings, {})},
+    keys: load(STORAGE.keys, []),
+    logs: load(STORAGE.logs, []),
+    stats: {requests:0, success:0, latency:null}
+  };
+
+  const $ = (id) => document.getElementById(id);
+  function load(key, fallback){
+    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+  }
+  function save(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+
+  const powerLabels = {
+    minimal: "ธรรมดา",
+    low: "พื้นฐาน",
+    medium: "อัตโนมัติ",
+    high: "แรง",
+    max: "MAX"
+  };
+
+  function normalizeThinkingLevel(level){
+    return ["minimal","low","medium","high","max"].includes(level) ? level : "medium";
+  }
+
+  function apiThinkingLevel(level){
+    level = normalizeThinkingLevel(level);
+    return level === "max" ? "high" : level;
+  }
+
+  function getThinkingBudget(){
+    return Math.max(1024, Number($("maxThinkingInput")?.value || state.settings.maxThinkingTokens || 8192));
+  }
+
+  function updatePowerUI(){
+    const level = normalizeThinkingLevel(state.settings.thinkingLevel);
+    $("powerChip").textContent = powerLabels[level];
+    $("maxThinkingInput").value = getThinkingBudget();
+    $("maxThinkingLabel").textContent = Number($("maxThinkingInput").value).toLocaleString();
+    $("showThinkingInput").checked = state.settings.showThinkingSummary !== false;
+    document.querySelectorAll(".power-level").forEach(btn => {
+      btn.classList.toggle("selected", btn.dataset.thinking === level);
+    });
+  }
+
+  function addThinkingSummary(el, summary, visible=true){
+    if(!summary) return;
+    const box=document.createElement("div");
+    box.className="thinking-box";
+    const head=document.createElement("div");
+    head.className="thinking-head";
+    const label=document.createElement("span");
+    label.className="thinking-label";
+    label.textContent="Reasoning summary";
+    const btn=document.createElement("button");
+    btn.className="thinking-btn";
+    btn.type="button";
+    btn.textContent=visible ? "ซ่อนสรุป" : "ดูสรุปการคิด";
+    const body=document.createElement("div");
+    body.className="thinking-summary";
+    body.textContent=summary;
+    body.hidden=!visible;
+    btn.onclick=()=>{ body.hidden=!body.hidden; btn.textContent=body.hidden ? "ดูสรุปการคิด" : "ซ่อนสรุป"; };
+    head.append(label,btn);
+    box.append(head,body);
+    el.appendChild(box);
+  }
+
+  const modelPresets = {
+    openai: ["gpt-4.1-mini","gpt-4.1","gpt-5.6-luna"],
+    openrouter: ["openai/gpt-4.1-mini","google/gemini-2.5-flash","anthropic/claude-sonnet-4"],
+    anthropic: ["claude-sonnet-4-20250514","claude-3-7-sonnet-latest"],
+    gemini: ["gemini-3.6-flash","gemini-3.5-flash","gemini-3.8-flash"],
+    custom: []
+  };
+
+  function endpointFor(provider){
+    return {
+      openai: "https://api.openai.com/v1/chat/completions",
+      openrouter: "https://openrouter.ai/api/v1/chat/completions",
+      anthropic: "https://api.anthropic.com/v1/messages",
+      gemini: "https://generativelanguage.googleapis.com/v1beta/interactions"
+    }[provider] || "";
+  }
+
+  function syncUI(){
+    let migrated = false;
+    if(state.config.provider === "gemini"){
+      if(!state.config.model || state.config.model === "gemini-2.5-flash" || state.config.model === "models/gemini-2.5-flash"){
+        state.config.model = "gemini-3.6-flash";
+        migrated = true;
+      }
+      if(!state.config.endpoint || state.config.endpoint.includes("/models/") || state.config.endpoint.includes(":generateContent")){
+        state.config.endpoint = "https://generativelanguage.googleapis.com/v1beta/interactions";
+        migrated = true;
+      }
+    }
+    if(migrated) save(STORAGE.config, state.config);
+    $("providerSelect").value = state.config.provider;
+    $("modelInput").value = state.config.model;
+    $("apiKeyInput").value = state.config.apiKey || "";
+    $("endpointInput").value = state.config.endpoint || "";
+    $("systemInput").value = state.settings.defaultSystem;
+    $("defaultSystemInput").value = state.settings.defaultSystem;
+    $("timeoutInput").value = state.settings.timeout;
+    $("autosaveSelect").value = state.settings.autosave;
+    $("responseFormatSelect").value = state.settings.responseFormat;
+    $("tempInput").value = state.settings.temperature;
+    $("maxTokensInput").value = state.settings.maxTokens;
+    updatePowerUI();
+    refreshQuickModels();
+    updateStats();
+    renderKeys();
+    renderLogs();
+    updateConnectionState();
+  }
+
+  function refreshQuickModels(){
+    const provider = $("providerSelect").value;
+    const models = modelPresets[provider] || [];
+    const current = $("modelInput").value.trim();
+    $("quickModel").innerHTML = "";
+    const list = [...new Set([current, ...models].filter(Boolean))];
+    list.forEach(m=>{
+      const o = document.createElement("option");
+      o.value=m;o.textContent=m;$("quickModel").appendChild(o);
+    });
+    $("quickModel").value=current;
+  }
+
+  function maskKey(k){
+    if(!k) return "No key";
+    if(k.length < 10) return "••••••••";
+    return k.slice(0,5) + "••••••" + k.slice(-4);
+  }
+
+  function renderKeys(){
+    const box = $("keyList");
+    if(!state.keys.length){ box.innerHTML = '<div class="empty">ยังไม่มี API Key ที่บันทึกไว้</div>'; return; }
+    box.innerHTML = state.keys.map((k,idx)=>`
+      <div class="key-row">
+        <div class="key-left">
+          <div class="key-name">${escapeHtml(k.label || "Untitled")} <span class="pill">${escapeHtml(k.provider)}</span></div>
+          <div class="key-mask">${maskKey(k.key)}</div>
+        </div>
+        <div class="actions">
+          <button class="btn mini" data-use-key="${idx}">Use</button>
+          <button class="btn mini danger" data-delete-key="${idx}">Delete</button>
+        </div>
+      </div>
+    `).join("");
+    box.querySelectorAll("[data-use-key]").forEach(b=>b.onclick=()=>{
+      const k=state.keys[Number(b.dataset.useKey)];
+      state.config.provider=k.provider; state.config.apiKey=k.key;
+      $("providerSelect").value=k.provider; $("apiKeyInput").value=k.key;
+      refreshQuickModels(); autoEndpoint();
+      save(STORAGE.config,state.config); updateConnectionState();
+      toast("Loaded key: " + k.label);
+      showView("dashboard");
+    });
+    box.querySelectorAll("[data-delete-key]").forEach(b=>b.onclick=()=>{
+      state.keys.splice(Number(b.dataset.deleteKey),1);
+      save(STORAGE.keys,state.keys); renderKeys(); toast("Key deleted");
+    });
+  }
+
+  function renderLogs(){
+    const html = state.logs.length ? state.logs.map(l=>`
+      <div class="log-item">
+        <div class="log-top"><span>${escapeHtml(l.provider)} · ${escapeHtml(l.model || "")}</span><span class="${l.ok?'ok':'bad'}">${l.ok?'SUCCESS':'ERROR'}</span></div>
+        <div class="muted" style="font-size:11px;margin-top:4px">${new Date(l.time).toLocaleString()} · ${l.latency ? l.latency+' ms' : '—'} · ${escapeHtml(l.message || '')}</div>
+      </div>
+    `).join("") : '<div class="empty">ยังไม่มี activity</div>';
+    $("fullLog").innerHTML=html;
+  }
+
+  function updateStats(){
+    const req=state.stats.requests;
+    const succ=state.stats.success;
+    $("statRequests").textContent=req;
+    $("statSuccess").textContent=(req ? Math.round((succ/req)*100) : 100) + "%";
+    $("statLatency").textContent=state.stats.latency ? state.stats.latency+" ms" : "—";
+    $("statProvider").textContent=state.config.provider;
+    $("statModel").textContent=state.config.model || "No model";
+  }
+
+  function updateConnectionState(){
+    const ok=state.config.apiKey && state.config.model;
+    $("readyTag").textContent=ok?"Ready":"Not configured";
+    $("readyTag").className="tag " + (ok ? "ok" : "warn");
+    $("connTag").textContent=ok?"Configured":"Idle";
+    $("connTag").className="tag " + (ok ? "ok" : "");
+  }
+
+  function addLog(ok, latency, message){
+    state.logs.unshift({time:Date.now(), provider:state.config.provider, model:state.config.model, ok, latency, message});
+    state.logs=state.logs.slice(0,200);
+    save(STORAGE.logs,state.logs);
+    renderLogs();
+    updateStats();
+  }
+
+  async function withTimeout(promise, ms){
+    const c=new AbortController();
+    const timer=setTimeout(()=>c.abort(),ms);
+    try{
+      return await promise(c.signal);
+    } finally{clearTimeout(timer);}
+  }
+
+  function messagesFromChat(){
+    return [...document.querySelectorAll("#messages .msg")].map(()=>null);
+  }
+
+  async function requestAI(userPrompt){
+    if(!state.config.apiKey) throw new Error("ยังไม่ได้ใส่ API Key");
+    if(!state.config.model) throw new Error("ยังไม่ได้ระบุ Model");
+
+    const provider=state.config.provider;
+    const model=state.config.model;
+    const endpoint=(state.config.endpoint || endpointFor(provider)).replace("{model}", encodeURIComponent(model));
+    if(!endpoint) throw new Error("กรุณาระบุ Endpoint สำหรับ Custom provider");
+
+    const sys=$("systemInput").value.trim() || state.settings.defaultSystem;
+    const temp=Number($("tempInput").value || .7);
+    const maxTokens=Number($("maxTokensInput").value || 1024);
+    const started=performance.now();
+
+    const result=await withTimeout(async (signal)=>{
+      let url=endpoint;
+      let headers={"Content-Type":"application/json"};
+      let body;
+
+      if(provider==="anthropic"){
+        headers["x-api-key"]=state.config.apiKey;
+        headers["anthropic-version"]="2023-06-01";
+        headers["anthropic-dangerous-direct-browser-access"]="true";
+        const thinkingLevel = normalizeThinkingLevel(state.settings.thinkingLevel);
+        const anthropicPayload = {
+          model, max_tokens:maxTokens, temperature:temp, system:sys,
+          messages:[{role:"user",content:userPrompt}]
+        };
+        if(thinkingLevel !== "minimal" && thinkingLevel !== "low"){
+          anthropicPayload.thinking = {
+            type: "enabled",
+            budget_tokens: Math.min(getThinkingBudget(), Math.max(1024, maxTokens - 1))
+          };
+        }
+        body=JSON.stringify(anthropicPayload);
+      } else if(provider==="gemini"){
+        // Gemini: use the current Interactions API.
+        // Official REST pattern: POST /v1beta/interactions with x-goog-api-key.
+        url = state.config.endpoint || "https://generativelanguage.googleapis.com/v1beta/interactions";
+        headers["x-goog-api-key"] = state.config.apiKey;
+        body=JSON.stringify({
+          model,
+          input:userPrompt,
+          system_instruction:sys,
+          store:false,
+          generation_config:{
+            max_output_tokens:Math.max(maxTokens, getThinkingBudget()),
+            thinking_level:apiThinkingLevel(state.settings.thinkingLevel),
+            thinking_summaries: state.settings.showThinkingSummary === false ? "none" : "auto"
+          }
+        });
+      } else {
+        headers["Authorization"]="Bearer "+state.config.apiKey;
+        if(provider==="openrouter"){
+          headers["HTTP-Referer"]=location.href;
+          headers["X-Title"]="AI API Runner Pro";
+        }
+        const genericPayload = {
+          model,
+          messages:[{role:"system",content:sys},{role:"user",content:userPrompt}],
+          temperature:temp,
+          max_tokens:maxTokens
+        };
+        if(provider==="openai" || provider==="openrouter" || provider==="custom"){
+          const level = normalizeThinkingLevel(state.settings.thinkingLevel);
+          genericPayload.reasoning_effort = level === "max" ? "high" : level;
+        }
+        body=JSON.stringify(genericPayload);
+      }
+
+      let r=await fetch(url,{method:"POST",headers,body,signal});
+      let text=await r.text();
+      let data={};
+      try{data=JSON.parse(text)}catch{data={raw:text}};
+      // Some OpenAI-compatible endpoints may reject reasoning_effort.
+      // Retry once without that optional field for compatibility.
+      if(!r.ok && (provider==="openai" || provider==="openrouter" || provider==="custom") && /reasoning(_|-)?effort|unsupported|unknown field|invalid.*parameter/i.test(text)){
+        try{
+          const retryPayload = JSON.parse(body);
+          delete retryPayload.reasoning_effort;
+          r=await fetch(url,{method:"POST",headers,body:JSON.stringify(retryPayload),signal});
+          text=await r.text();
+          try{data=JSON.parse(text)}catch{data={raw:text}};
+        }catch{}
+      }
+      if(!r.ok){
+        const msg=data?.error?.message || data?.message || data?.raw || ("HTTP "+r.status);
+        throw new Error(msg);
+      }
+
+      let answer="";
+      let usage=data.usage || null;
+      if(provider==="anthropic"){
+        answer=(data.content||[]).map(x=>x.text||"").join("");
+      }else if(provider==="gemini"){
+        // Interactions API exposes optional thought summaries in thought steps.
+        const steps = Array.isArray(data.steps) ? data.steps : [];
+        const modelStep = [...steps].reverse().find(s => s.type === "model_output");
+        answer = (modelStep?.content || []).map(x => x.text || "").join("");
+        if(!answer && data.output_text) answer = data.output_text;
+        const thoughtTexts = [];
+        for(const step of steps){
+          if(step.type !== "thought") continue;
+          const summary = Array.isArray(step.summary) ? step.summary : [];
+          for(const part of summary){
+            if(typeof part === "string") thoughtTexts.push(part);
+            else if(part?.text) thoughtTexts.push(part.text);
+          }
+        }
+        usage = data.usage || data.usageMetadata || null;
+        return {answer:answer || "[API returned an empty response]", usage, raw:data,
+          thinkingSummary: thoughtTexts.join("\n\n").trim() || "" , latency:Math.round(performance.now()-started)};
+      }else{
+        answer=data.choices?.[0]?.message?.content ?? "";
+      }
+      if(!answer) answer = state.settings.responseFormat==="json" ? JSON.stringify(data,null,2) : "[API returned an empty response]";
+      return {answer,usage,raw:data,thinkingSummary:""};
+    }, Number(state.settings.timeout)||60000);
+
+    return {...result, latency:Math.round(performance.now()-started)};
+  }
+
+  async function sendPrompt(){
+    const prompt=$("prompt").value.trim();
+    if(!prompt) return;
+    addMessage("user",prompt);
+    $("prompt").value="";
+    setBusy(true);
+    const started=performance.now();
+    try{
+      const res=await requestAI(prompt);
+      addMessage("ai",res.answer,res.thinkingSummary || "");
+      state.stats.requests++; state.stats.success++; state.stats.latency=res.latency;
+      addLog(true,res.latency,"Request completed");
+    }catch(e){
+      const latency=Math.round(performance.now()-started);
+      addMessage("ai","เกิดข้อผิดพลาด: "+e.message);
+      state.stats.requests++; state.stats.latency=latency;
+      addLog(false,latency,e.message);
+    }finally{
+      setBusy(false); updateStats();
+    }
+  }
+
+  function setBusy(b){
+    $("sendBtn").disabled=b;
+    $("testBtn").disabled=b;
+    $("testTopBtn").disabled=b;
+    $("sendBtn").textContent=b?"Running…":"Send";
+  }
+
+  function addMessage(role,text,thinkingSummary=""){
+    const el=document.createElement("div");
+    el.className="msg "+(role==="user"?"user":"ai");
+    const meta=document.createElement("span");
+    meta.className="meta"; meta.textContent=role==="user"?"YOU":"AI";
+    el.append(meta,document.createTextNode(text));
+    if(role==="ai" && thinkingSummary && state.settings.showThinkingSummary !== false){
+      addThinkingSummary(el, thinkingSummary, true);
+    }
+    $("messages").appendChild(el);
+    $("messages").scrollTop=$("messages").scrollHeight;
+  }
+
+  async function testConnection(){
+    setBusy(true);
+    $("connTag").textContent="Testing…";
+    try{
+      const res=await requestAI("Reply with exactly: CONNECTION_OK");
+      $("connTag").textContent="Connected";
+      $("connTag").className="tag ok";
+      state.stats.requests++; state.stats.success++; state.stats.latency=res.latency;
+      addLog(true,res.latency,"Connection test passed");
+      toast("เชื่อมต่อสำเร็จ • "+res.latency+" ms");
+    }catch(e){
+      $("connTag").textContent="Failed";
+      $("connTag").className="tag bad";
+      state.stats.requests++; 
+      addLog(false,null,e.message);
+      toast("เชื่อมต่อไม่สำเร็จ: "+e.message,true);
+    }finally{
+      setBusy(false); updateStats();
+    }
+  }
+
+  function saveConfig(){
+    state.config.provider=$("providerSelect").value;
+    state.config.model=$("modelInput").value.trim();
+    state.config.apiKey=$("apiKeyInput").value.trim();
+    state.config.endpoint=$("endpointInput").value.trim();
+    if(!state.config.endpoint && state.config.provider!=="custom") state.config.endpoint=endpointFor(state.config.provider);
+    save(STORAGE.config,state.config);
+    updateConnectionState(); refreshQuickModels();
+    toast("บันทึกการเชื่อมต่อแล้ว");
+  }
+
+  function autoEndpoint(){
+    if(!$("endpointInput").value.trim() || ($("providerSelect").value!=="custom" && $("providerSelect").value!=="gemini")){
+      $("endpointInput").value=endpointFor($("providerSelect").value);
+    }
+  }
+
+  function showView(view){
+    const titles={dashboard:"AI API Dashboard",keys:"API Key Vault",settings:"Application Settings",logs:"Activity Log"};
+    document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
+    document.querySelectorAll(".dash,.settings").forEach(v=>v.classList.remove("active"));
+    $(view==="dashboard"?"dashboardView":view+"View").classList.add("active");
+    $("pageTitle").textContent=titles[view];
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+  }
+
+  function toast(msg,danger=false){
+    const t=document.createElement("div");
+    t.textContent=msg;
+    t.style.cssText=`position:fixed;right:18px;bottom:18px;z-index:9999;padding:12px 14px;border-radius:12px;border:1px solid ${danger?"rgba(251,113,133,.3)":"rgba(110,168,254,.25)"};background:#0d1a2b;color:#fff;box-shadow:0 16px 40px rgba(0,0,0,.35);font-size:12px;max-width:360px`;
+    document.body.appendChild(t); setTimeout(()=>t.remove(),2600);
+  }
+
+  $("powerBtn").onclick=(e)=>{
+    e.stopPropagation();
+    $("powerPanel").classList.toggle("hidden");
+    $("powerBtn").classList.toggle("active", !$("powerPanel").classList.contains("hidden"));
+    updatePowerUI();
+  };
+
+  document.addEventListener("click",(e)=>{
+    if(!$("powerPanel").contains(e.target) && e.target!==$("powerBtn") && !$("powerBtn").contains(e.target)){
+      $("powerPanel").classList.add("hidden");
+      $("powerBtn").classList.remove("active");
+    }
+  });
+
+  document.querySelectorAll(".power-level").forEach(btn=>{
+    btn.onclick=()=>{
+      state.settings.thinkingLevel=btn.dataset.thinking;
+      save(STORAGE.settings,state.settings);
+      updatePowerUI();
+      toast("ระดับพลัง AI: "+powerLabels[state.settings.thinkingLevel]);
+    };
+  });
+
+  $("maxThinkingInput").oninput=()=>{
+    state.settings.maxThinkingTokens=Number($("maxThinkingInput").value);
+    $("maxThinkingLabel").textContent=Number($("maxThinkingInput").value).toLocaleString();
+    save(STORAGE.settings,state.settings);
+  };
+
+  $("showThinkingInput").onchange=()=>{
+    state.settings.showThinkingSummary=$("showThinkingInput").checked;
+    save(STORAGE.settings,state.settings);
+  };
+
+  $("providerSelect").onchange=()=>{
+    const provider=$("providerSelect").value;
+    if(!modelPresets[provider]?.includes($("modelInput").value)) $("modelInput").value=modelPresets[provider]?.[0] || "";
+    autoEndpoint(); refreshQuickModels();
+  };
+  $("quickModel").onchange=()=>{ $("modelInput").value=$("quickModel").value; state.config.model=$("quickModel").value; save(STORAGE.config,state.config); updateStats(); };
+  $("saveConfigBtn").onclick=saveConfig;
+  $("testBtn").onclick=testConnection;
+  $("testTopBtn").onclick=testConnection;
+  $("sendBtn").onclick=sendPrompt;
+  $("clearChatBtn").onclick=()=>{$("messages").innerHTML='<div class="msg ai"><span class="meta">AI API RUNNER</span>Chat cleared.</div>';};
+  $("toggleKeyBtn").onclick=()=>{ const i=$("apiKeyInput"); i.type=i.type==="password"?"text":"password"; $("toggleKeyBtn").textContent=i.type==="password"?"Show":"Hide"; };
+
+  $("addKeyBtn").onclick=()=>{
+    const label=$("keyLabelInput").value.trim()||"Untitled";
+    const provider=$("keyProviderInput").value;
+    const key=$("keyValueInput").value.trim();
+    if(!key){toast("กรุณาใส่ API Key",true);return;}
+    state.keys.unshift({label,provider,key,createdAt:Date.now()});
+    save(STORAGE.keys,state.keys); renderKeys();
+    $("keyValueInput").value="";
+    toast("เพิ่ม API Key แล้ว");
+  };
+
+  $("saveAppSettingsBtn").onclick=()=>{
+    state.settings.defaultSystem=$("defaultSystemInput").value;
+    state.settings.timeout=Number($("timeoutInput").value||60000);
+    state.settings.autosave=$("autosaveSelect").value;
+    state.settings.responseFormat=$("responseFormatSelect").value;
+    state.settings.temperature=Number($("tempInput").value||.7);
+    state.settings.maxTokens=Number($("maxTokensInput").value||1024);
+    save(STORAGE.settings,state.settings);
+    $("systemInput").value=state.settings.defaultSystem;
+    toast("บันทึก Settings แล้ว");
+  };
+
+  $("clearLogsBtn").onclick=()=>{state.logs=[];save(STORAGE.logs,state.logs);renderLogs();toast("ล้าง Logs แล้ว");};
+  $("clearAllBtn").onclick=()=>{
+    if(!confirm("ลบข้อมูล local ทั้งหมดของ AI API Runner?")) return;
+    Object.values(STORAGE).forEach(k=>localStorage.removeItem(k));
+    location.reload();
+  };
+
+  $("exportBtn").onclick=()=>{
+    const payload={config:state.config,settings:state.settings,keys:state.keys.map(k=>({...k,key:k.key})),logs:state.logs,exportedAt:new Date().toISOString()};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="ai-api-runner-backup.json";a.click();URL.revokeObjectURL(a.href);
+  };
+
+  $("importBtn").onclick=()=>$("importFile").click();
+  $("importFile").onchange=async(e)=>{
+    const file=e.target.files[0]; if(!file)return;
+    try{
+      const data=JSON.parse(await file.text());
+      if(data.config) { state.config={...defaults.config,...data.config}; save(STORAGE.config,state.config); }
+      if(data.settings) { state.settings={...defaults.settings,...data.settings}; save(STORAGE.settings,state.settings); }
+      if(Array.isArray(data.keys)) {state.keys=data.keys;save(STORAGE.keys,state.keys);}
+      if(Array.isArray(data.logs)) {state.logs=data.logs;save(STORAGE.logs,state.logs);}
+      syncUI(); toast("Import สำเร็จ");
+    }catch(err){toast("Import ไม่สำเร็จ: "+err.message,true)}
+    e.target.value="";
+  };
+
+  document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>showView(b.dataset.view));
+  $("prompt").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();sendPrompt();}});
+  $("modelInput").addEventListener("input",()=>{ if(state.settings.autosave==="on"){state.config.model=$("modelInput").value.trim();save(STORAGE.config,state.config);updateStats();refreshQuickModels();}});
+  $("apiKeyInput").addEventListener("input",()=>{ if(state.settings.autosave==="on"){state.config.apiKey=$("apiKeyInput").value.trim();save(STORAGE.config,state.config);updateConnectionState();}});
+  $("endpointInput").addEventListener("input",()=>{ if(state.settings.autosave==="on"){state.config.endpoint=$("endpointInput").value.trim();save(STORAGE.config,state.config);}});
+
+  syncUI();
+})();
+</script>
+</body>
+</html>
